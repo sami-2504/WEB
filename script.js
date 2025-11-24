@@ -1,37 +1,13 @@
-
-
-        const MODEL_PATH = '/WEB/scene.gltf'; 
+// Corrected path based on your file structure (scene.gltf is in the root directory)
+        // If your repo is named 'WEB', the path should be '/WEB/scene.gltf'
+        // Since the image shows scene.gltf in the root, let's try the absolute path from root:
+        const MODEL_PATH = 'scene.gltf'; 
         const AUTO_SPIN_SPEED = 0.5; // How fast the main Y-axis spin is
-
+        
         // --- 1. SCENE SETUP ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0f0f0f); 
-        scene.fog = new THREE.FogExp2(0x0f0f0f, 0.02);
+        // ... (rest of Scene Setup remains the same) ...
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 5;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.toneMapping = THREE.ReinhardToneMapping;
-        renderer.toneMappingExposure = 2.3;
-        renderer.shadowMap.enabled = true;
-
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        // --- 2. LIGHTING ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-        scene.add(ambientLight);
-
-        const spotLight = new THREE.SpotLight(0xffffff, 1);
-        spotLight.position.set(10, 10, 10);
-        spotLight.castShadow = true;
-        scene.add(spotLight);
-
-        const rimLight = new THREE.PointLight(0x6366f1, 2); 
-        rimLight.position.set(-5, 5, -5);
-        scene.add(rimLight);
+        // ... (rest of Lighting remains the same) ...
 
         // --- 3. MODEL LOADING ---
         let activeModel = null;
@@ -62,83 +38,58 @@
                     mixer.clipAction(gltf.animations[0]).play();
                 }
             },
-            (xhr) => { console.log((xhr.loaded / xhr.total * 100) + '% loaded'); },
+            // Progress Callback: Added check for total size to fix Infinity% error
+            (xhr) => { 
+                if (xhr.total > 0) {
+                    console.log((xhr.loaded / xhr.total * 100).toFixed(0) + '% loaded');
+                } else {
+                    console.log("Loading model...");
+                }
+            },
             (error) => {
                 console.warn("Could not load local model. Using fallback Cube.", error);
                 createFallbackCube();
             }
         );
-
-        function createFallbackCube() {
-            const geo = new THREE.BoxGeometry(2, 2, 2);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x6366f1, wireframe: true });
-            activeModel = new THREE.Mesh(geo, mat);
-            scene.add(activeModel);
-        }
-
-        // --- 4. SCROLL TRACKING ---
-        let currentScrollPercent = 0;
-
-        function onScroll() {
-            const scrollY = window.scrollY;
-            const docHeight = document.body.scrollHeight - window.innerHeight;
-            // Update the global variable, don't set rotation directly here
-            currentScrollPercent = scrollY / docHeight;
-        }
-
-        window.addEventListener('scroll', onScroll);
-
-        // --- 5. ANIMATION LOOP ---
-        const clock = new THREE.Clock();
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const delta = clock.getDelta();
-            const elapsedTime = clock.getElapsedTime();
-
-            if (mixer) mixer.update(delta);
-
-            if (activeModel) {
-                // Y-axis: Scroll interaction (1 full spin) + Auto Spin (main spin)
-                activeModel.rotation.y = (currentScrollPercent * Math.PI * 2) + (elapsedTime * AUTO_SPIN_SPEED);
-                
-                // X-axis: Scroll interaction (tilt) + Slow X-axis Auto Spin (adds diagonal feel)
-                activeModel.rotation.x = (currentScrollPercent * 0.5) + (elapsedTime * (AUTO_SPIN_SPEED / 3));
-
-                // Z-axis: Auto Spin only (adds the subtle rolling effect to highlight 3D)
-                activeModel.rotation.z = elapsedTime * (AUTO_SPIN_SPEED / 5);
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-// --- 6. NAVIGATION SCROLL FIX ---
-document.querySelectorAll('nav a').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault(); // Stop the default jump
         
-        const targetId = this.getAttribute('href').substring(1);
-        const targetElement = document.getElementById(targetId);
+        // ... (rest of createFallbackCube remains the same) ...
 
-        if (targetElement) {
-            // Calculate the position to center the card in the viewport
-            const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
-            const offsetPosition = elementPosition - (window.innerHeight / 2) + (targetElement.offsetHeight / 2);
+        // ... (rest of Scroll Tracking remains the same) ...
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: "smooth"
+        // ... (rest of Animation Loop remains the same) ...
+
+        // ... (rest of animate function remains the same) ...
+        
+        // --- 6. NAVIGATION SCROLL FIX (REPLACING OLD CODE) ---
+        // This fixes the offset issue and works reliably on GitHub Pages by waiting for the DOM.
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            const navLinks = document.querySelectorAll('nav a');
+            
+            // Console check to verify links are found
+            console.log(`Found ${navLinks.length} navigation links.`);
+
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault(); // STOP the default anchor jump
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        // Calculate offset to center the element
+                        const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
+                        const offsetPosition = elementPosition - (window.innerHeight / 2) + (targetElement.offsetHeight / 2);
+
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: "smooth"
+                        });
+                    } else {
+                        console.warn(`Target element #${targetId} not found!`);
+                    }
+                });
             });
-        }
-    });
-});
-
-
-        animate();
-
+        });
+        
+        animate(); // Ensure animate is called outside the DOMContentLoaded event if it wasn't already.
