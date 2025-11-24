@@ -1,6 +1,6 @@
 
 
-        const MODEL_PATH = 'models/scene.gltf'; 
+        const MODEL_PATH = 'scene.gltf'; 
         const AUTO_SPIN_SPEED = 0.5; // How fast the main Y-axis spin is
 
         // --- 1. SCENE SETUP ---
@@ -118,5 +118,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
 
         animate();
